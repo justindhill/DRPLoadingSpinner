@@ -26,6 +26,9 @@
     
     self.spinner = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
     self.spinner.center = self.view.center;
+    self.spinner.rotationCycleDuration = 2;
+    self.spinner.minimumArcLength = M_PI / 4;
+    self.spinner.drawCycleDuration = 1;
     [self.view addSubview:self.spinner];
     
     self.spinner2 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
@@ -38,8 +41,10 @@
     self.spinner2.frame = spinner2Frame;
     
     self.spinner3 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
-    self.spinner3.rotationCycleDuration = 2;
+    self.spinner3.rotationCycleDuration = 3;
+    self.spinner3.minimumArcLength = M_PI / 3;
     self.spinner3.drawCycleDuration = 1;
+    self.spinner3.colorSequence = @[ [UIColor lightGrayColor] ];
     
     [self.view addSubview:self.spinner3];
     

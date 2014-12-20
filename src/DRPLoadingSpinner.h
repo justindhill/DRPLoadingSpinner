@@ -11,6 +11,11 @@
 @interface DRPLoadingSpinner : UIView
 
 /**
+ @brief When the arc is shrinking, how small it should get at a minimum in radians.
+ */
+@property CGFloat minimumArcLength;
+
+/**
  @brief How long in seconds it should take for the drawing to rotate 360 degrees.
         No easing function is applied to this duration, i.e. it is linear.
  */

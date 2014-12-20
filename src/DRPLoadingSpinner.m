@@ -17,6 +17,7 @@
 @property (strong) CADisplayLink *displayLink;
 @property CFTimeInterval animationStartTime;
 @property CGFloat lastFrameDrawPercentage;
+@property CGFloat drawIterationAngleOffset;
 @property BOOL erasing;
 @property NSUInteger colorIndex;
 
@@ -52,8 +53,14 @@
 - (void)setup {
     self.clearsContextBeforeDrawing = YES;
     self.animationStartTime = kInvalidatedTimestamp;
+    self.drawIterationAngleOffset = 0;
+    self.lastFrameDrawPercentage = 0;
+    self.erasing = NO;
+    
     self.drawCycleDuration = .75;
     self.rotationCycleDuration = 4;
+    
+    self.minimumArcLength = M_PI_4;
     
     self.colorSequence = @[
         [UIColor redColor],
@@ -88,6 +95,9 @@
     self.animationStartTime = kInvalidatedTimestamp;
     [self.displayLink removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
     
+    self.drawIterationAngleOffset = 0;
+    self.lastFrameDrawPercentage = 0;
+    self.erasing = NO;
     self.displayLink = nil;
     _animating = NO;
     
@@ -118,6 +128,7 @@
         self.erasing = !self.erasing;
         
         if (!self.erasing) {
+            self.drawIterationAngleOffset = fmodf(self.drawIterationAngleOffset - (self.minimumArcLength * 2), 2 * M_PI);
             self.colorIndex = (self.colorIndex + 1) % self.colorSequence.count;
         }
     }
@@ -132,12 +143,14 @@
     CGFloat startAngle;
     CGFloat endAngle;
     
+    CGFloat totalTransitionArcAngle = (2 * M_PI) - (2 * self.minimumArcLength);
+    
     if (self.erasing) {
-        endAngle = -M_PI_2 + rotationAngle;
-        startAngle = (drawPercentComplete * 2 * M_PI) - M_PI_2 + rotationAngle;
+        endAngle = -M_PI_2 + rotationAngle - self.minimumArcLength + self.drawIterationAngleOffset;
+        startAngle = (drawPercentComplete * totalTransitionArcAngle) + self.drawIterationAngleOffset - M_PI_2 + rotationAngle;
     } else {
-        startAngle = -M_PI_2 + rotationAngle;
-        endAngle = (drawPercentComplete * 2 * M_PI) - M_PI_2 + rotationAngle;
+        startAngle = -M_PI_2 + rotationAngle + self.drawIterationAngleOffset;
+        endAngle = (drawPercentComplete * totalTransitionArcAngle) + self.minimumArcLength - M_PI_2 + rotationAngle + self.drawIterationAngleOffset;
     }
     
     CGContextAddArc(ctx, x, y, 12, startAngle, endAngle, 0);
