@@ -69,6 +69,8 @@
         [UIColor blueColor]
     ];
     
+    self.lineWidth = 1.;
+    
     self.opaque = NO;
     self.backgroundColor = [UIColor clearColor];
 }
@@ -139,6 +141,7 @@
     
     CGFloat x = rect.size.width / 2;
     CGFloat y = rect.size.height / 2;
+    CGFloat radius = MIN(x - self.lineWidth, y - self.lineWidth);
     
     CGFloat startAngle;
     CGFloat endAngle;
@@ -153,10 +156,10 @@
         endAngle = (drawPercentComplete * totalTransitionArcAngle) + self.minimumArcLength - M_PI_2 + rotationAngle + self.drawIterationAngleOffset;
     }
     
-    CGContextAddArc(ctx, x, y, 12, startAngle, endAngle, 0);
+    CGContextAddArc(ctx, x, y, radius, startAngle, endAngle, 0);
     
     CGContextSetStrokeColorWithColor(ctx, [self.colorSequence[self.colorIndex] CGColor]);
-    CGContextSetLineWidth(ctx, 1);
+    CGContextSetLineWidth(ctx, self.lineWidth);
     CGContextStrokePath(ctx);
 }
 

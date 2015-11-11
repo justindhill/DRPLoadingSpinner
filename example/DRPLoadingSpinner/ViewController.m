@@ -24,14 +24,14 @@
     
     self.view.backgroundColor = [UIColor whiteColor];
     
-    self.spinner = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
+    self.spinner = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
     self.spinner.center = self.view.center;
     self.spinner.rotationCycleDuration = 2;
     self.spinner.minimumArcLength = M_PI / 4;
     self.spinner.drawCycleDuration = 1;
     [self.view addSubview:self.spinner];
     
-    self.spinner2 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
+    self.spinner2 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
     self.spinner2.rotationCycleDuration = 2;
     self.spinner2.drawCycleDuration = .5;
     [self.view addSubview:self.spinner2];
@@ -40,16 +40,18 @@
     spinner2Frame.origin.y -= 60;
     self.spinner2.frame = spinner2Frame;
     
-    self.spinner3 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
-    self.spinner3.rotationCycleDuration = 3;
-    self.spinner3.minimumArcLength = M_PI / 3;
-    self.spinner3.drawCycleDuration = 1;
+    self.spinner3 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 25, 25)];
+    self.spinner3.rotationCycleDuration = 1.6;
+    self.spinner3.minimumArcLength = M_PI / 3.;
+    self.spinner3.drawCycleDuration = .8;
     self.spinner3.colorSequence = @[ [UIColor lightGrayColor] ];
+    self.spinner3.lineWidth = 2.;
     
     [self.view addSubview:self.spinner3];
     
     CGRect spinner3Frame = self.spinner.frame;
     spinner3Frame.origin.y += 60;
+    spinner3Frame.size = CGSizeMake(25, 25);
     self.spinner3.frame = spinner3Frame;
     
     UIButton *toggleButton = [UIButton buttonWithType:UIButtonTypeSystem];

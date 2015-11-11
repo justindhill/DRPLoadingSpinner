@@ -16,6 +16,11 @@
 @property CGFloat minimumArcLength;
 
 /**
+ *  @brief The width of the arc's line.
+ */
+@property CGFloat lineWidth;
+
+/**
  @brief How long in seconds it should take for the drawing to rotate 360 degrees.
         No easing function is applied to this duration, i.e. it is linear.
  */
