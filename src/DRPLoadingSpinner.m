@@ -10,16 +10,14 @@
 
 #define kInvalidatedTimestamp -1
 
-@interface DRPLoadingSpinner () {
-    BOOL _animating;
-}
+@interface DRPLoadingSpinner ()
 
-@property (strong) CADisplayLink *displayLink;
-@property CFTimeInterval animationStartTime;
-@property CGFloat lastFrameDrawPercentage;
-@property CGFloat drawIterationAngleOffset;
-@property BOOL erasing;
+@property BOOL isAnimating;
 @property NSUInteger colorIndex;
+@property CAShapeLayer *circleLayer;
+@property CALayer *circleContainer;
+@property CGFloat drawRotationOffsetRadians;
+@property BOOL isFirstCycle;
 
 @end
 
@@ -42,6 +40,21 @@
     return self;
 }
 
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+    [self refreshCircleFrame];
+}
+
+- (void)refreshCircleFrame {
+    CGFloat sideLen = MIN(self.layer.frame.size.width, self.layer.frame.size.height) - (2 * self.lineWidth);
+    CGFloat xOffset = ceilf((self.frame.size.width - sideLen) / 2.0);
+    CGFloat yOffset = ceilf((self.frame.size.height - sideLen) / 2.0);
+    
+    self.circleContainer.frame = CGRectMake(xOffset, yOffset, sideLen, sideLen);
+    self.circleLayer.frame = self.circleContainer.bounds;
+    self.circleLayer.path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, sideLen, sideLen)].CGPath;
+}
+
 - (id)initWithCoder:(NSCoder *)aDecoder {
     if (self = [super initWithCoder:aDecoder]) {
         [self setup];
@@ -51,11 +64,6 @@
 }
 
 - (void)setup {
-    self.clearsContextBeforeDrawing = YES;
-    self.animationStartTime = kInvalidatedTimestamp;
-    self.drawIterationAngleOffset = 0;
-    self.lastFrameDrawPercentage = 0;
-    self.erasing = NO;
     
     self.drawCycleDuration = .75;
     self.rotationCycleDuration = 4;
@@ -69,98 +77,118 @@
         [UIColor blueColor]
     ];
     
-    self.lineWidth = 1.;
+    self.lineWidth = 2.;
     
     self.opaque = NO;
     self.backgroundColor = [UIColor clearColor];
+    
+    self.circleContainer = [CALayer layer];
+    self.circleContainer.frame = self.bounds;
+    
+    self.circleLayer = [[CAShapeLayer alloc] init];
+    self.circleLayer.fillColor = [UIColor clearColor].CGColor;
+    self.circleLayer.strokeColor = [self.colorSequence[0] CGColor];
+    self.circleLayer.anchorPoint = CGPointMake(.5, .5);
+    self.circleLayer.frame = self.bounds;
+    [self refreshCircleFrame];
 }
 
-#pragma mark - Property accessors
-- (BOOL)isAnimating {
-    return _animating;
-}
 
 #pragma mark - Animation control
 - (void)startAnimating {
-    if (self.displayLink) {
-        [self stopAnimating];
+    
+    self.circleLayer.hidden = NO;
+    [self.circleLayer removeAllAnimations];
+    
+    self.isAnimating = YES;
+    self.isFirstCycle = YES;
+    self.colorIndex = 0;
+    self.circleLayer.lineWidth = self.lineWidth;
+    self.circleLayer.strokeEnd = [self proportionFromArcLengthRadians:self.minimumArcLength];
+    
+    self.drawRotationOffsetRadians = 0;
+    self.circleLayer.actions = @{@"transform": [NSNull null]};
+    
+    [self animateStrokeOnLayer:self.circleLayer reverse:NO];
+    [self animateRotationOnLayer:self.circleLayer];
+}
+
+- (void)animateStrokeOnLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse {
+    
+    
+    CGFloat maxArcLengthRadians = (2 * M_PI) - self.minimumArcLength;
+    CABasicAnimation *strokeAnimation;
+    if (reverse) {
+        [CATransaction begin];
+        
+        strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeStart"];
+        CGFloat newStrokeStart = (2 * M_PI) - (2 * self.minimumArcLength);
+        
+        layer.strokeEnd = [self proportionFromArcLengthRadians:maxArcLengthRadians];
+        layer.strokeStart = [self proportionFromArcLengthRadians:newStrokeStart];
+        
+        strokeAnimation.fromValue = @(0);
+        strokeAnimation.toValue = @([self proportionFromArcLengthRadians:newStrokeStart]);
+        
+    } else {
+        if (!self.isFirstCycle) {
+            self.drawRotationOffsetRadians -= (self.minimumArcLength * 2);
+        }
+        
+//        [UIView performWithoutAnimation:^{
+            layer.affineTransform = CGAffineTransformRotate(CGAffineTransformIdentity, self.drawRotationOffsetRadians - M_PI_2);
+            layer.strokeStart = 0;
+            layer.strokeEnd = self.minimumArcLength;
+//        }];
+        
+        [CATransaction begin];
+        
+        strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
+        strokeAnimation.fromValue = @([self proportionFromArcLengthRadians:self.minimumArcLength]);
+        strokeAnimation.toValue = @([self proportionFromArcLengthRadians:maxArcLengthRadians]);
     }
     
-    self.colorIndex = 0;
+    strokeAnimation.delegate = self;
+    strokeAnimation.fillMode = kCAFillModeForwards;
+    [CATransaction setAnimationDuration:.75];
+    [layer removeAnimationForKey:@"strokeEnd"];
+    [layer removeAnimationForKey:@"strokeStart"];
     
-    self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(setNeedsDisplay)];
-    [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-    _animating = YES;
+    NSLog(@"%@", layer.animationKeys);
+    [layer addAnimation:strokeAnimation forKey:nil];
+    
+    [CATransaction commit];
+    
+    self.isFirstCycle = NO;
+}
+
+- (void)animateRotationOnLayer:(CALayer *)layer {
+    [CATransaction begin];
+    
+    CABasicAnimation *rotation = [CABasicAnimation animationWithKeyPath:@"affineTransform"];
+    rotation.fromValue = [NSValue valueWithCGAffineTransform:CGAffineTransformIdentity];
+    rotation.toValue = [NSValue valueWithCGAffineTransform:CGAffineTransformMakeRotation(M_PI)];
+    rotation.repeatCount = CGFLOAT_MAX;
+    rotation.duration = 3.0;
+    
+    [layer addAnimation:rotation forKey:nil];
+    
+    [CATransaction commit];
+}
+
+- (CGFloat)proportionFromArcLengthRadians:(CGFloat)radians {
+    return ((fmodf(radians, 2 * M_PI)) / (2 * M_PI));
 }
 
 - (void)stopAnimating {
-    self.animationStartTime = kInvalidatedTimestamp;
-    [self.displayLink removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
-    
-    self.drawIterationAngleOffset = 0;
-    self.lastFrameDrawPercentage = 0;
-    self.erasing = NO;
-    self.displayLink = nil;
-    _animating = NO;
-    
-    [self setNeedsDisplay];
+    self.isAnimating = NO;
+    [self.circleLayer removeAllAnimations];
 }
 
-#pragma mark - Drawing
-- (void)drawRect:(CGRect)rect {
-    
-    if (!self.isAnimating) {
-        return;
+- (void)layoutSublayersOfLayer:(CALayer *)layer {
+    if (!self.circleLayer.superlayer) {
+        [self.layer addSublayer:self.circleLayer];
     }
-    
-    CGContextRef ctx = UIGraphicsGetCurrentContext();
-    
-    if (self.animationStartTime == kInvalidatedTimestamp) {
-        self.animationStartTime = self.displayLink.timestamp;
-    }
-    
-    CFTimeInterval elapsedDrawCycleTime = fmodf(self.displayLink.timestamp - self.animationStartTime, self.drawCycleDuration);
-    
-    CGFloat drawPercentComplete = [self sinEaseInOutWithCurrentTime:elapsedDrawCycleTime
-                                                           startVal:0
-                                                             change:1
-                                                           duration:self.drawCycleDuration];
-    
-    if (drawPercentComplete < self.lastFrameDrawPercentage) {
-        self.erasing = !self.erasing;
-        
-        if (!self.erasing) {
-            self.drawIterationAngleOffset = fmodf(self.drawIterationAngleOffset - (self.minimumArcLength * 2), 2 * M_PI);
-            self.colorIndex = (self.colorIndex + 1) % self.colorSequence.count;
-        }
-    }
-    self.lastFrameDrawPercentage = drawPercentComplete;
-    
-    CGFloat rotationPercentComplete = fmodf(self.displayLink.timestamp - self.animationStartTime, self.rotationCycleDuration) / self.rotationCycleDuration;
-    CGFloat rotationAngle = rotationPercentComplete * 2 * M_PI;
-    
-    CGFloat x = rect.size.width / 2;
-    CGFloat y = rect.size.height / 2;
-    CGFloat radius = MIN(x - self.lineWidth, y - self.lineWidth);
-    
-    CGFloat startAngle;
-    CGFloat endAngle;
-    
-    CGFloat totalTransitionArcAngle = (2 * M_PI) - (2 * self.minimumArcLength);
-    
-    if (self.erasing) {
-        endAngle = -M_PI_2 + rotationAngle - self.minimumArcLength + self.drawIterationAngleOffset;
-        startAngle = (drawPercentComplete * totalTransitionArcAngle) + self.drawIterationAngleOffset - M_PI_2 + rotationAngle;
-    } else {
-        startAngle = -M_PI_2 + rotationAngle + self.drawIterationAngleOffset;
-        endAngle = (drawPercentComplete * totalTransitionArcAngle) + self.minimumArcLength - M_PI_2 + rotationAngle + self.drawIterationAngleOffset;
-    }
-    
-    CGContextAddArc(ctx, x, y, radius, startAngle, endAngle, 0);
-    
-    CGContextSetStrokeColorWithColor(ctx, [self.colorSequence[self.colorIndex] CGColor]);
-    CGContextSetLineWidth(ctx, self.lineWidth);
-    CGContextStrokePath(ctx);
 }
 
 #pragma mark - Auto Layout
@@ -171,6 +199,22 @@
 #pragma mark - Easing
 - (double)sinEaseInOutWithCurrentTime:(double)t startVal:(double)b change:(double)c duration:(double)d {
     return -c/2 * (cos(M_PI * t / d) - 1) + b;
+}
+
+- (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag {
+    NSLog(@"Animation stopped: %p, finished: %ld", anim, (long)flag);
+    if (flag) {
+        if ([anim isKindOfClass:[CABasicAnimation class]]) {
+            CABasicAnimation *basicAnim = (CABasicAnimation *)anim;
+            
+            BOOL isStrokeStart = [basicAnim.keyPath isEqualToString:@"strokeStart"];
+            BOOL isStrokeEnd = [basicAnim.keyPath isEqualToString:@"strokeEnd"];
+            
+            if (isStrokeStart || isStrokeEnd) {
+                [self animateStrokeOnLayer:self.circleLayer reverse:isStrokeEnd];
+            }
+        }
+    }
 }
 
 @end

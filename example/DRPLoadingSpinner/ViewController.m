@@ -68,19 +68,19 @@
     toggleButton.frame = shiftedToggleFrame;
     
     [self.spinner startAnimating];
-    [self.spinner2 startAnimating];
-    [self.spinner3 startAnimating];
+//    [self.spinner2 startAnimating];
+//    [self.spinner3 startAnimating];
 }
 
 - (void)toggleAnimation {
     if (self.spinner.isAnimating) {
         [self.spinner stopAnimating];
-        [self.spinner2 stopAnimating];
-        [self.spinner3 stopAnimating];
+//        [self.spinner2 stopAnimating];
+//        [self.spinner3 stopAnimating];
     } else {
         [self.spinner startAnimating];
-        [self.spinner2 startAnimating];
-        [self.spinner3 startAnimating];
+//        [self.spinner2 startAnimating];
+//        [self.spinner3 startAnimating];
     }
 }
 
