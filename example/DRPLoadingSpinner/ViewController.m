@@ -26,9 +26,9 @@
     
     self.spinner = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
     self.spinner.center = self.view.center;
-    self.spinner.rotationCycleDuration = 2;
-    self.spinner.minimumArcLength = M_PI / 4;
-    self.spinner.drawCycleDuration = 1;
+//    self.spinner.rotationCycleDuration = 2;
+//    self.spinner.minimumArcLength = M_PI / 4;
+//    self.spinner.drawCycleDuration = 1;
     [self.view addSubview:self.spinner];
     
     self.spinner2 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];

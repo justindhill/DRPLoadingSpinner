@@ -65,8 +65,8 @@
 
 - (void)setup {
     
-    self.drawCycleDuration = .75;
-    self.rotationCycleDuration = 4;
+    self.drawCycleDuration = 1;
+    self.rotationCycleDuration = 2;
     
     self.minimumArcLength = M_PI_4;
     
@@ -110,7 +110,7 @@
     self.circleLayer.actions = @{@"transform": [NSNull null]};
     
     [self animateStrokeOnLayer:self.circleLayer reverse:NO];
-    [self animateRotationOnLayer:self.circleLayer];
+//    [self animateRotationOnLayer:self.circleLayer];
 }
 
 - (void)animateStrokeOnLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse {
@@ -118,11 +118,12 @@
     
     CGFloat maxArcLengthRadians = (2 * M_PI) - self.minimumArcLength;
     CABasicAnimation *strokeAnimation;
+    
     if (reverse) {
         [CATransaction begin];
         
         strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeStart"];
-        CGFloat newStrokeStart = (2 * M_PI) - (2 * self.minimumArcLength);
+        CGFloat newStrokeStart = maxArcLengthRadians - self.minimumArcLength;
         
         layer.strokeEnd = [self proportionFromArcLengthRadians:maxArcLengthRadians];
         layer.strokeStart = [self proportionFromArcLengthRadians:newStrokeStart];
@@ -132,14 +133,19 @@
         
     } else {
         if (!self.isFirstCycle) {
-            self.drawRotationOffsetRadians -= (self.minimumArcLength * 2);
+            self.drawRotationOffsetRadians -= (2 * self.minimumArcLength);
         }
         
-//        [UIView performWithoutAnimation:^{
-            layer.affineTransform = CGAffineTransformRotate(CGAffineTransformIdentity, self.drawRotationOffsetRadians - M_PI_2);
-            layer.strokeStart = 0;
-            layer.strokeEnd = self.minimumArcLength;
-//        }];
+        layer.strokeStart = 0;
+        layer.strokeEnd = self.minimumArcLength;
+        
+        CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+        rotationAnimation.fromValue = @(self.drawRotationOffsetRadians);
+        rotationAnimation.toValue = @(self.drawRotationOffsetRadians + (2 * M_PI));
+        rotationAnimation.duration = self.rotationCycleDuration;
+        rotationAnimation.repeatCount = CGFLOAT_MAX;
+        rotationAnimation.fillMode = kCAFillModeForwards;
+        [layer addAnimation:rotationAnimation forKey:nil];
         
         [CATransaction begin];
         
@@ -150,7 +156,7 @@
     
     strokeAnimation.delegate = self;
     strokeAnimation.fillMode = kCAFillModeForwards;
-    [CATransaction setAnimationDuration:.75];
+    [CATransaction setAnimationDuration:self.drawCycleDuration];
     [layer removeAnimationForKey:@"strokeEnd"];
     [layer removeAnimationForKey:@"strokeStart"];
     
