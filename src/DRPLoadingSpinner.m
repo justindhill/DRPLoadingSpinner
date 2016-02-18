@@ -106,11 +106,10 @@
     self.circleLayer.lineWidth = self.lineWidth;
     self.circleLayer.strokeEnd = [self proportionFromArcLengthRadians:self.minimumArcLength];
     
-    self.drawRotationOffsetRadians = 0;
+    self.drawRotationOffsetRadians = -M_PI_2;
     self.circleLayer.actions = @{@"transform": [NSNull null]};
     
     [self animateStrokeOnLayer:self.circleLayer reverse:NO];
-//    [self animateRotationOnLayer:self.circleLayer];
 }
 
 - (void)animateStrokeOnLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse {
@@ -136,9 +135,6 @@
             self.drawRotationOffsetRadians -= (2 * self.minimumArcLength);
         }
         
-        layer.strokeStart = 0;
-        layer.strokeEnd = self.minimumArcLength;
-        
         CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
         rotationAnimation.fromValue = @(self.drawRotationOffsetRadians);
         rotationAnimation.toValue = @(self.drawRotationOffsetRadians + (2 * M_PI));
@@ -152,34 +148,23 @@
         strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
         strokeAnimation.fromValue = @([self proportionFromArcLengthRadians:self.minimumArcLength]);
         strokeAnimation.toValue = @([self proportionFromArcLengthRadians:maxArcLengthRadians]);
+        
+        layer.strokeStart = 0;
+        layer.strokeEnd = [strokeAnimation.toValue doubleValue];
     }
     
     strokeAnimation.delegate = self;
     strokeAnimation.fillMode = kCAFillModeForwards;
+    strokeAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
     [CATransaction setAnimationDuration:self.drawCycleDuration];
     [layer removeAnimationForKey:@"strokeEnd"];
     [layer removeAnimationForKey:@"strokeStart"];
     
-    NSLog(@"%@", layer.animationKeys);
     [layer addAnimation:strokeAnimation forKey:nil];
     
     [CATransaction commit];
     
     self.isFirstCycle = NO;
-}
-
-- (void)animateRotationOnLayer:(CALayer *)layer {
-    [CATransaction begin];
-    
-    CABasicAnimation *rotation = [CABasicAnimation animationWithKeyPath:@"affineTransform"];
-    rotation.fromValue = [NSValue valueWithCGAffineTransform:CGAffineTransformIdentity];
-    rotation.toValue = [NSValue valueWithCGAffineTransform:CGAffineTransformMakeRotation(M_PI)];
-    rotation.repeatCount = CGFLOAT_MAX;
-    rotation.duration = 3.0;
-    
-    [layer addAnimation:rotation forKey:nil];
-    
-    [CATransaction commit];
 }
 
 - (CGFloat)proportionFromArcLengthRadians:(CGFloat)radians {
