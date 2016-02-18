@@ -24,7 +24,7 @@
 
 #pragma mark - Life cycle
 - (instancetype)init {
-    if (self = [super init]) {
+    if (self = [super initWithFrame:CGRectZero]) {
         [self setup];
     }
     
@@ -39,20 +39,6 @@
     return self;
 }
 
-- (void)setFrame:(CGRect)frame {
-    [super setFrame:frame];
-    [self refreshCircleFrame];
-}
-
-- (void)refreshCircleFrame {
-    CGFloat sideLen = MIN(self.layer.frame.size.width, self.layer.frame.size.height) - (2 * self.lineWidth);
-    CGFloat xOffset = ceilf((self.frame.size.width - sideLen) / 2.0);
-    CGFloat yOffset = ceilf((self.frame.size.height - sideLen) / 2.0);
-    
-    self.circleLayer.frame = CGRectMake(xOffset, yOffset, sideLen, sideLen);
-    self.circleLayer.path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, sideLen, sideLen)].CGPath;
-}
-
 - (id)initWithCoder:(NSCoder *)aDecoder {
     if (self = [super initWithCoder:aDecoder]) {
         [self setup];
@@ -62,11 +48,12 @@
 }
 
 - (void)setup {
-    
     self.drawCycleDuration = 1;
     self.rotationCycleDuration = 2;
-    
     self.minimumArcLength = M_PI_4;
+    self.lineWidth = 2.;
+    self.opaque = NO;
+    self.backgroundColor = [UIColor clearColor];
     
     self.colorSequence = @[
         [UIColor redColor],
@@ -75,19 +62,36 @@
         [UIColor blueColor]
     ];
     
-    self.lineWidth = 2.;
-    
-    self.opaque = NO;
-    self.backgroundColor = [UIColor clearColor];
-    
     self.circleLayer = [[CAShapeLayer alloc] init];
     self.circleLayer.fillColor = [UIColor clearColor].CGColor;
     self.circleLayer.anchorPoint = CGPointMake(.5, .5);
-    self.circleLayer.frame = self.bounds;
     self.circleLayer.hidden = YES;
     [self refreshCircleFrame];
 }
 
+#pragma mark - Accessors
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+    [self refreshCircleFrame];
+}
+
+#pragma mark - Layout
+- (void)refreshCircleFrame {
+    CGFloat sideLen = MIN(self.layer.frame.size.width, self.layer.frame.size.height) - (2 * self.lineWidth);
+    CGFloat xOffset = ceilf((self.frame.size.width - sideLen) / 2.0);
+    CGFloat yOffset = ceilf((self.frame.size.height - sideLen) / 2.0);
+    
+    self.circleLayer.frame = CGRectMake(xOffset, yOffset, sideLen, sideLen);
+    self.circleLayer.path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, sideLen, sideLen)].CGPath;
+}
+
+- (void)layoutSublayersOfLayer:(CALayer *)layer {
+    [super layoutSublayersOfLayer:layer];
+    
+    if (!self.circleLayer.superlayer) {
+        [self.layer addSublayer:self.circleLayer];
+    }
+}
 
 #pragma mark - Animation control
 - (void)startAnimating {
@@ -111,10 +115,23 @@
         @"hidden": [NSNull null]
     };
     
-    [self animateStrokeOnLayer:self.circleLayer reverse:NO];
+    [self addAnimationsToLayer:self.circleLayer reverse:NO];
 }
 
-- (void)animateStrokeOnLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse {
+- (void)stopAnimating {
+    self.isAnimating = NO;
+    [self.circleLayer removeAllAnimations];
+    self.circleLayer.hidden = YES;
+}
+
+#pragma mark - Auto Layout
+- (CGSize)intrinsicContentSize {
+    return CGSizeMake(40, 40);
+}
+
+#pragma mark
+
+- (void)addAnimationsToLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse {
     
     CGFloat maxArcLengthRadians = (2 * M_PI) - self.minimumArcLength;
     CABasicAnimation *strokeAnimation;
@@ -177,41 +194,16 @@
     return ((fmodf(radians, 2 * M_PI)) / (2 * M_PI));
 }
 
-- (void)stopAnimating {
-    self.isAnimating = NO;
-    [self.circleLayer removeAllAnimations];
-    self.circleLayer.hidden = YES;
-}
-
-- (void)layoutSublayersOfLayer:(CALayer *)layer {
-    if (!self.circleLayer.superlayer) {
-        [self.layer addSublayer:self.circleLayer];
-    }
-}
-
-#pragma mark - Auto Layout
-- (CGSize)intrinsicContentSize {
-    return CGSizeMake(40, 40);
-}
-
-#pragma mark - Easing
-- (double)sinEaseInOutWithCurrentTime:(double)t startVal:(double)b change:(double)c duration:(double)d {
-    return -c/2 * (cos(M_PI * t / d) - 1) + b;
-}
-
-- (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)flag {
-    if (flag && [anim isKindOfClass:[CABasicAnimation class]]) {
+- (void)animationDidStop:(CAAnimation *)anim finished:(BOOL)finished {
+    if (finished && [anim isKindOfClass:[CABasicAnimation class]]) {
         CABasicAnimation *basicAnim = (CABasicAnimation *)anim;
-        
         BOOL isStrokeStart = [basicAnim.keyPath isEqualToString:@"strokeStart"];
         BOOL isStrokeEnd = [basicAnim.keyPath isEqualToString:@"strokeEnd"];
         
-        if (isStrokeStart || isStrokeEnd) {
-            [self animateStrokeOnLayer:self.circleLayer reverse:isStrokeEnd];
-            
-            if (isStrokeStart) {
-                [self advanceColorSequence];
-            }
+        [self addAnimationsToLayer:self.circleLayer reverse:isStrokeEnd];
+        
+        if (isStrokeStart) {
+            [self advanceColorSequence];
         }
     }
 }

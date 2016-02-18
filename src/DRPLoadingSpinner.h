@@ -28,7 +28,7 @@
 
 /**
  @brief How long in seconds it should take for a complete circle to be drawn
-        or erased. A sinusoidal in-out easing function is applied to this duration.
+        or erased. An in-out easing function is applied to this duration.
  */
 @property CFTimeInterval drawCycleDuration;
 
