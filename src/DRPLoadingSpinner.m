@@ -10,7 +10,7 @@
 
 #define kInvalidatedTimestamp -1
 
-@interface DRPLoadingSpinner ()
+@interface DRPLoadingSpinner () <CAAnimationDelegate>
 
 @property BOOL isAnimating;
 @property NSUInteger colorIndex;
@@ -50,7 +50,8 @@
 - (void)setup {
     self.drawCycleDuration = 1;
     self.rotationCycleDuration = 2;
-    self.minimumArcLength = M_PI_4;
+    self.maximumArcLength = (2 * M_PI) - M_PI_4;
+    self.minimumArcLength = 0;
     self.lineWidth = 2.;
     self.opaque = NO;
     self.backgroundColor = [UIColor clearColor];
@@ -95,9 +96,6 @@
 
 #pragma mark - Animation control
 - (void)startAnimating {
-    
-    NSAssert(self.minimumArcLength > CGFLOAT_MIN, @"minimumArcLength must be set to a value > CGFLOAT_MIN. This value can be only slightly greater than CGFLOAT_MIN, but must be greater.");
-    
     self.circleLayer.hidden = NO;
     [self.circleLayer removeAllAnimations];
     
@@ -133,16 +131,15 @@
 
 - (void)addAnimationsToLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse {
     
-    CGFloat maxArcLengthRadians = (2 * M_PI) - self.minimumArcLength;
     CABasicAnimation *strokeAnimation;
     
     if (reverse) {
         [CATransaction begin];
         
         strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeStart"];
-        CGFloat newStrokeStart = maxArcLengthRadians - self.minimumArcLength;
+        CGFloat newStrokeStart = self.maximumArcLength - self.minimumArcLength;
         
-        layer.strokeEnd = [self proportionFromArcLengthRadians:maxArcLengthRadians];
+        layer.strokeEnd = [self proportionFromArcLengthRadians:self.maximumArcLength];
         layer.strokeStart = [self proportionFromArcLengthRadians:newStrokeStart];
         
         strokeAnimation.fromValue = @(0);
@@ -150,7 +147,9 @@
         
     } else {
         if (!self.isFirstCycle) {
-            self.drawRotationOffsetRadians -= (2 * self.minimumArcLength);
+            CGFloat drawRotateDurationRatio = (2 * self.drawCycleDuration) / self.rotationCycleDuration;
+            self.drawRotationOffsetRadians += (2 * M_PI * drawRotateDurationRatio) - ((2 * M_PI) - self.maximumArcLength) - self.minimumArcLength;
+            self.drawRotationOffsetRadians = fmodf(self.drawRotationOffsetRadians, 2 * M_PI);
         }
         
         CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
@@ -165,7 +164,7 @@
         
         strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
         strokeAnimation.fromValue = @([self proportionFromArcLengthRadians:self.minimumArcLength]);
-        strokeAnimation.toValue = @([self proportionFromArcLengthRadians:maxArcLengthRadians]);
+        strokeAnimation.toValue = @([self proportionFromArcLengthRadians:self.maximumArcLength]);
         
         layer.strokeStart = 0;
         layer.strokeEnd = [strokeAnimation.toValue doubleValue];

@@ -16,6 +16,11 @@
 @property CGFloat minimumArcLength;
 
 /**
+ *  @brief When the arc is growing, how large it should get at a maximum in radians
+ */
+@property CGFloat maximumArcLength;
+
+/**
  *  @brief The width of the arc's line.
  */
 @property CGFloat lineWidth;
