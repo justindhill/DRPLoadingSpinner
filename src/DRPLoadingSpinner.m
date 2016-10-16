@@ -24,7 +24,7 @@
 
 #pragma mark - Life cycle
 - (instancetype)init {
-    if (self = [super initWithFrame:CGRectZero]) {
+    if (self = [super initWithFrame:CGRectMake(0, 0, 22, 22)]) {
         [self setup];
     }
     
@@ -48,8 +48,8 @@
 }
 
 - (void)setup {
-    self.drawCycleDuration = 1;
-    self.rotationCycleDuration = 2;
+    self.drawCycleDuration = 0.75;
+    self.rotationCycleDuration = 1.5;
     self.maximumArcLength = (2 * M_PI) - M_PI_4;
     self.minimumArcLength = 0;
     self.lineWidth = 2.;
