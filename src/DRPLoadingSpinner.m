@@ -68,7 +68,6 @@
     self.circleLayer.fillColor = [UIColor clearColor].CGColor;
     self.circleLayer.anchorPoint = CGPointMake(.5, .5);
     self.circleLayer.strokeColor = self.colorSequence.firstObject.CGColor;
-    self.circleLayer.lineWidth = self.lineWidth;
     self.circleLayer.hidden = YES;
 
     self.circleLayer.actions = @{
@@ -89,6 +88,27 @@
 //    [self insertPlane:self.circleLayer];
 }
 
+- (void)setStaticArcLength:(CGFloat)staticArcLength {
+    _staticArcLength = staticArcLength;
+
+    if (!self.isAnimating) {
+        self.circleLayer.hidden = NO;
+        self.circleLayer.strokeColor = self.colorSequence.firstObject.CGColor;
+        self.circleLayer.strokeStart = 0;
+        self.circleLayer.strokeEnd = [self proportionFromArcLengthRadians:staticArcLength];
+        self.circleLayer.transform = CATransform3DRotate(CATransform3DIdentity, -M_PI_2, 0, 0, 1);
+    }
+}
+
+- (void)setLineWidth:(CGFloat)lineWidth {
+    self.circleLayer.lineWidth = lineWidth;
+}
+
+- (CGFloat)lineWidth {
+    return self.circleLayer.lineWidth;
+}
+
+#pragma mark - Layout
 //- (void)insertPlane:(CALayer *)layer {
 //    [layer.sublayers makeObjectsPerformSelector:@selector(removeFromSuperlayer)];
 //
@@ -113,19 +133,6 @@
 //    [layer addSublayer:right];
 //}
 
-- (void)setStaticArcLength:(CGFloat)staticArcLength {
-    _staticArcLength = staticArcLength;
-
-    if (!self.isAnimating) {
-        self.circleLayer.hidden = NO;
-        self.circleLayer.strokeColor = self.colorSequence.firstObject.CGColor;
-        self.circleLayer.strokeStart = 0;
-        self.circleLayer.strokeEnd = [self proportionFromArcLengthRadians:staticArcLength];
-        self.circleLayer.transform = CATransform3DRotate(CATransform3DIdentity, -M_PI_2, 0, 0, 1);
-    }
-}
-
-#pragma mark - Layout
 - (void)refreshCircleFrame {
     CGFloat sideLen = MIN(self.layer.frame.size.width, self.layer.frame.size.height) - (2 * self.lineWidth);
     CGFloat xOffset = ceilf((self.frame.size.width - sideLen) / 2.0);
@@ -150,7 +157,6 @@
     
     self.isAnimating = YES;
     self.isFirstCycle = YES;
-    self.circleLayer.lineWidth = self.lineWidth;
     self.circleLayer.strokeEnd = [self proportionFromArcLengthRadians:self.minimumArcLength];
     
     self.colorIndex = 0;

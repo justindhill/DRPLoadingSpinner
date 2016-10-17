@@ -29,7 +29,7 @@
 /**
  *  @brief The width of the arc's line.
  */
-@property (assign) CGFloat lineWidth;
+@property (nonatomic) CGFloat lineWidth;
 
 /**
  @brief How long in seconds it should take for the drawing to rotate 360 degrees.
