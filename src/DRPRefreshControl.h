@@ -56,12 +56,13 @@
 - (void)removeFromPartnerObject;
 
 /**
- *  @brief Convenience API. This calls beginRefreshing on the underlying UIRefreshControl.
+ *  @brief Begins refreshing. If the attached scroll view is scrolled to the top, animates the loading spinner
+ *         into view.
  */
 - (void)beginRefreshing;
 
 /**
- *  @brief Convenience API. This calls endRefreshing on the underlying UIRefreshControl.
+ *  @brief Ends refreshing.
  */
 - (void)endRefreshing;
 
