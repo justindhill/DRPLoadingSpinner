@@ -1,4 +1,4 @@
-# DRPLoadingSpinner ![Preview image](http://imgur.com/cUbeItF.gif)
+# DRPLoadingSpinner ![Preview image](http://imgur.com/0cLpUM3.gif)
 
 DRPLoadingSpinner is a neat little loading spinner. It's pretty
 configurable, so you can achieve a variety of effects. Check out
