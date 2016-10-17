@@ -8,7 +8,7 @@ to get started with. Here's a snippet of creating one with default
 settings:
 
 ```objc
-    DRPLoadingSpinner *spinner = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
+    DRPLoadingSpinner *spinner = [[DRPLoadingSpinner alloc] init];
 	[self.view addSubview:spinner];
 	[spinner startAnimating];
 ```
