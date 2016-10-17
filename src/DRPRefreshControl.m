@@ -9,12 +9,6 @@
 #import "DRPRefreshControl.h"
 #import "DRPLoadingSpinner.h"
 
-/**
- *  @brief After testing, this is what Apple believes is the perfect offset
- *         at which refreshing should commence.
- */
-const CGFloat DRPMagicAppleRefreshOffset = -109.0;
-
 @interface DRPRefreshControl () <UITableViewDelegate>
 
 @property (strong) UIRefreshControl *refreshControl;
@@ -22,6 +16,7 @@ const CGFloat DRPMagicAppleRefreshOffset = -109.0;
 @property (weak) id<UITableViewDelegate> originalDelegate;
 @property (weak) UITableViewController *tableViewController;
 @property (strong) void (^refreshBlock)(void);
+@property BOOL awaitingRefreshEnd;
 
 @end
 
@@ -61,11 +56,54 @@ const CGFloat DRPMagicAppleRefreshOffset = -109.0;
 }
 
 - (void)beginRefreshing {
+    BOOL adjustScrollOffset = (self.tableViewController.tableView.contentInset.top == -self.tableViewController.tableView.contentOffset.y);
+
+    self.loadingSpinner.hidden = NO;
     [self.refreshControl beginRefreshing];
+    [self refreshControlTriggered:self.refreshControl];
+
+    if (adjustScrollOffset) {
+        [self.tableViewController.tableView setContentOffset:CGPointMake(0, -self.tableViewController.tableView.contentInset.top) animated:YES];
+    }
 }
 
 - (void)endRefreshing {
-    [self.loadingSpinner stopAnimating];
+    __weak DRPRefreshControl *weakSelf = self;
+
+    if (self.tableViewController.tableView.isDragging) {
+        [self.refreshControl endRefreshing];
+        return;
+    }
+
+    self.awaitingRefreshEnd = YES;
+    NSString * const animationGroupKey = @"animationGroupKey";
+
+    [CATransaction begin];
+    [CATransaction setCompletionBlock:^{
+        [weakSelf.loadingSpinner stopAnimating];
+        [weakSelf.loadingSpinner.layer removeAnimationForKey:animationGroupKey];
+
+
+        if (!weakSelf.tableViewController.tableView.isDecelerating) {
+            weakSelf.awaitingRefreshEnd = NO;
+        }
+    }];
+
+    CABasicAnimation *scale = [CABasicAnimation animationWithKeyPath:@"transform"];
+    CATransform3D scaleTransform = CATransform3DScale(CATransform3DIdentity, 0.25, 0.25, 1);
+    scale.toValue = [NSValue valueWithCATransform3D:scaleTransform];
+
+    CABasicAnimation *opacity = [CABasicAnimation animationWithKeyPath:@"opacity"];
+    opacity.toValue = @(0);
+
+    CAAnimationGroup *group = [CAAnimationGroup animation];
+    group.animations = @[ scale, opacity ];
+    group.removedOnCompletion = NO;
+    group.fillMode = kCAFillModeForwards;
+    
+    [self.loadingSpinner.layer addAnimation:group forKey:animationGroupKey];
+    [CATransaction commit];
+
     [self.refreshControl endRefreshing];
 }
 
@@ -74,6 +112,26 @@ const CGFloat DRPMagicAppleRefreshOffset = -109.0;
 
     if (self.refreshBlock) {
         self.refreshBlock();
+    }
+}
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+    if ([self.originalDelegate respondsToSelector:@selector(scrollViewDidEndDragging:willDecelerate:)]) {
+        [self.originalDelegate scrollViewDidEndDragging:scrollView willDecelerate:decelerate];
+    }
+
+    if (self.loadingSpinner.isAnimating && !self.refreshControl.isRefreshing) {
+        [self endRefreshing];
+    }
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    if ([self.originalDelegate respondsToSelector:@selector(scrollViewDidEndDecelerating:)]) {
+        [self.originalDelegate scrollViewDidEndDecelerating:scrollView];
+    }
+
+    if (!self.refreshControl.isRefreshing) {
+        self.awaitingRefreshEnd = NO;
     }
 }
 
@@ -89,6 +147,35 @@ const CGFloat DRPMagicAppleRefreshOffset = -109.0;
             self.loadingSpinner.frame.size.width,
             self.loadingSpinner.frame.size.height
         );
+    }
+
+    if (!self.awaitingRefreshEnd) {
+        self.loadingSpinner.hidden = NO;
+
+        const CGFloat stretchLength = M_PI_2 + M_PI_4;
+        CGFloat draggedOffset = scrollView.contentInset.top + scrollView.contentOffset.y;
+        CGFloat percentToThreshold = draggedOffset / [self appleMagicOffset];
+
+        self.loadingSpinner.staticArcLength = MIN(percentToThreshold * stretchLength, stretchLength);
+    }
+}
+
+/**
+ *  @brief After testing, this is what Apple believes is the perfect offset
+ *         at which refreshing should commence.
+ */
+- (CGFloat)appleMagicOffset {
+    __block NSInteger majorOSVersion;
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        majorOSVersion = [[[[[UIDevice currentDevice] systemVersion] componentsSeparatedByString:@"."] firstObject] integerValue];
+    });
+
+    if (majorOSVersion <= 9) {
+        return -109.0;
+    } else {
+        return -129.0;
     }
 }
 

@@ -43,4 +43,9 @@ NSString * const ReuseIdentifier = @"ReuseIdentifier";
     return cell;
 }
 
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [self.drpRefreshControl beginRefreshing];
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
 @end

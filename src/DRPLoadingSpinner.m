@@ -15,7 +15,6 @@
 @property BOOL isAnimating;
 @property NSUInteger colorIndex;
 @property CAShapeLayer *circleLayer;
-@property CGFloat drawRotationOffsetRadians;
 @property BOOL isFirstCycle;
 
 @end
@@ -24,7 +23,7 @@
 
 #pragma mark - Life cycle
 - (instancetype)init {
-    if (self = [super initWithFrame:CGRectMake(0, 0, 22, 22)]) {
+    if (self = [super initWithFrame:CGRectMake(0, 0, 25, 25)]) {
         [self setup];
     }
     
@@ -48,10 +47,12 @@
 }
 
 - (void)setup {
+    
     self.drawCycleDuration = 0.75;
     self.rotationCycleDuration = 1.5;
+    self.staticArcLength = 0;
     self.maximumArcLength = (2 * M_PI) - M_PI_4;
-    self.minimumArcLength = 0;
+    self.minimumArcLength = 0.1;
     self.lineWidth = 2.;
     self.opaque = NO;
     self.backgroundColor = [UIColor clearColor];
@@ -66,7 +67,18 @@
     self.circleLayer = [[CAShapeLayer alloc] init];
     self.circleLayer.fillColor = [UIColor clearColor].CGColor;
     self.circleLayer.anchorPoint = CGPointMake(.5, .5);
+    self.circleLayer.strokeColor = self.colorSequence.firstObject.CGColor;
+    self.circleLayer.lineWidth = self.lineWidth;
     self.circleLayer.hidden = YES;
+
+    self.circleLayer.actions = @{
+        @"lineWidth": [NSNull null],
+        @"strokeEnd": [NSNull null],
+        @"strokeStart": [NSNull null],
+        @"transform": [NSNull null],
+        @"hidden": [NSNull null]
+    };
+    
     [self refreshCircleFrame];
 }
 
@@ -74,6 +86,43 @@
 - (void)setFrame:(CGRect)frame {
     [super setFrame:frame];
     [self refreshCircleFrame];
+//    [self insertPlane:self.circleLayer];
+}
+
+//- (void)insertPlane:(CALayer *)layer {
+//    [layer.sublayers makeObjectsPerformSelector:@selector(removeFromSuperlayer)];
+//
+//    CALayer *top = [[CALayer alloc] init];
+//    top.backgroundColor = UIColor.cyanColor.CGColor;
+//    top.frame = CGRectMake(layer.frame.size.width/2, 0, 1, layer.frame.size.height/2);
+//    [layer addSublayer:top];
+//
+//    CALayer *bottom = [[CALayer alloc] init];
+//    bottom.backgroundColor = UIColor.magentaColor.CGColor;
+//    bottom.frame = CGRectMake(layer.frame.size.width/2, layer.frame.size.height/2, 1, layer.frame.size.height/2);
+//    [layer addSublayer:bottom];
+//
+//    CALayer *left = [[CALayer alloc] init];
+//    left.backgroundColor = UIColor.yellowColor.CGColor;
+//    left.frame = CGRectMake(0, layer.frame.size.height/2, layer.frame.size.width/2, 1);
+//    [layer addSublayer:left];
+//
+//    CALayer *right = [[CALayer alloc] init];
+//    right.backgroundColor = UIColor.blackColor.CGColor;
+//    right.frame = CGRectMake(layer.frame.size.width/2, layer.frame.size.height/2, layer.frame.size.width/2, 1);
+//    [layer addSublayer:right];
+//}
+
+- (void)setStaticArcLength:(CGFloat)staticArcLength {
+    _staticArcLength = staticArcLength;
+
+    if (!self.isAnimating) {
+        self.circleLayer.hidden = NO;
+        self.circleLayer.strokeColor = self.colorSequence.firstObject.CGColor;
+        self.circleLayer.strokeStart = 0;
+        self.circleLayer.strokeEnd = [self proportionFromArcLengthRadians:staticArcLength];
+        self.circleLayer.transform = CATransform3DRotate(CATransform3DIdentity, -M_PI_2, 0, 0, 1);
+    }
 }
 
 #pragma mark - Layout
@@ -96,8 +145,8 @@
 
 #pragma mark - Animation control
 - (void)startAnimating {
+    [self stopAnimating];
     self.circleLayer.hidden = NO;
-    [self.circleLayer removeAllAnimations];
     
     self.isAnimating = YES;
     self.isFirstCycle = YES;
@@ -107,19 +156,13 @@
     self.colorIndex = 0;
     self.circleLayer.strokeColor = [self.colorSequence[self.colorIndex] CGColor];
     
-    self.drawRotationOffsetRadians = -M_PI_2;
-    self.circleLayer.actions = @{
-        @"transform": [NSNull null],
-        @"hidden": [NSNull null]
-    };
-    
-    [self addAnimationsToLayer:self.circleLayer reverse:NO];
+    [self addAnimationsToLayer:self.circleLayer reverse:NO rotationOffset:-M_PI_2];
 }
 
 - (void)stopAnimating {
     self.isAnimating = NO;
-    [self.circleLayer removeAllAnimations];
     self.circleLayer.hidden = YES;
+    [self.circleLayer removeAllAnimations];
 }
 
 #pragma mark - Auto Layout
@@ -129,10 +172,14 @@
 
 #pragma mark
 
-- (void)addAnimationsToLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse {
+- (void)addAnimationsToLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse rotationOffset:(CGFloat)rotationOffset {
     
     CABasicAnimation *strokeAnimation;
-    
+    CGFloat strokeDuration = self.drawCycleDuration;
+    CGFloat currentDistanceToStrokeStart = 2 * M_PI * layer.strokeStart;
+
+    NSLog(@"distanceToStrokeStart: %f", currentDistanceToStrokeStart);
+
     if (reverse) {
         [CATransaction begin];
         
@@ -146,24 +193,39 @@
         strokeAnimation.toValue = @([self proportionFromArcLengthRadians:newStrokeStart]);
         
     } else {
-        if (!self.isFirstCycle) {
-            CGFloat drawRotateDurationRatio = (2 * self.drawCycleDuration) / self.rotationCycleDuration;
-            self.drawRotationOffsetRadians += (2 * M_PI * drawRotateDurationRatio) - ((2 * M_PI) - self.maximumArcLength) - self.minimumArcLength;
-            self.drawRotationOffsetRadians = fmodf(self.drawRotationOffsetRadians, 2 * M_PI);
+        CGFloat strokeFromValue = self.minimumArcLength;
+        CGFloat rotationStartRadians = rotationOffset;
+
+        if (self.isFirstCycle) {
+            if (self.staticArcLength > 0) {
+                if (self.staticArcLength > self.maximumArcLength) {
+                    NSLog(@"DRPLoadingSpinner: staticArcLength is set to a value greater than maximumArcLength. You probably didn't mean to do this.");
+                }
+
+                strokeFromValue = self.staticArcLength;
+                strokeDuration *= (self.staticArcLength / self.maximumArcLength);
+            }
+
+            self.isFirstCycle = NO;
+        } else {
+            rotationStartRadians += currentDistanceToStrokeStart;
         }
-        
+
         CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
-        rotationAnimation.fromValue = @(self.drawRotationOffsetRadians);
-        rotationAnimation.toValue = @(self.drawRotationOffsetRadians + (2 * M_PI));
+        rotationAnimation.fromValue = @(rotationStartRadians);
+        rotationAnimation.toValue = @(rotationStartRadians + (2 * M_PI));
         rotationAnimation.duration = self.rotationCycleDuration;
         rotationAnimation.repeatCount = CGFLOAT_MAX;
         rotationAnimation.fillMode = kCAFillModeForwards;
-        [layer addAnimation:rotationAnimation forKey:nil];
+        
+        [layer removeAnimationForKey:@"rotation"];
+        [layer addAnimation:rotationAnimation forKey:@"rotation"];
+
         
         [CATransaction begin];
         
         strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
-        strokeAnimation.fromValue = @([self proportionFromArcLengthRadians:self.minimumArcLength]);
+        strokeAnimation.fromValue = @([self proportionFromArcLengthRadians:strokeFromValue]);
         strokeAnimation.toValue = @([self proportionFromArcLengthRadians:self.maximumArcLength]);
         
         layer.strokeStart = 0;
@@ -173,15 +235,12 @@
     strokeAnimation.delegate = self;
     strokeAnimation.fillMode = kCAFillModeForwards;
     strokeAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    [CATransaction setAnimationDuration:self.drawCycleDuration];
-    [layer removeAnimationForKey:@"strokeEnd"];
-    [layer removeAnimationForKey:@"strokeStart"];
-    
-    [layer addAnimation:strokeAnimation forKey:nil];
-    
-    [CATransaction commit];
-    
-    self.isFirstCycle = NO;
+    [CATransaction setAnimationDuration:strokeDuration];
+
+    [layer removeAnimationForKey:@"stroke"];
+    [layer addAnimation:strokeAnimation forKey:@"stroke"];
+
+    [CATransaction commit];    
 }
 
 - (void)advanceColorSequence {
@@ -198,8 +257,9 @@
         CABasicAnimation *basicAnim = (CABasicAnimation *)anim;
         BOOL isStrokeStart = [basicAnim.keyPath isEqualToString:@"strokeStart"];
         BOOL isStrokeEnd = [basicAnim.keyPath isEqualToString:@"strokeEnd"];
-        
-        [self addAnimationsToLayer:self.circleLayer reverse:isStrokeEnd];
+
+        CGFloat rotationOffset = fmodf([[self.circleLayer.presentationLayer valueForKeyPath:@"transform.rotation.z"] floatValue], 2 * M_PI);
+        [self addAnimationsToLayer:self.circleLayer reverse:isStrokeEnd rotationOffset:rotationOffset];
         
         if (isStrokeStart) {
             [self advanceColorSequence];
