@@ -37,7 +37,7 @@ pod install 'DRPLoadingSpinner'
 
 ### Customizing
 There are a handful of things you can customize on your loading spinner:
-* *Color sequence*: DRPLoadingSpinner has the opportunity to change color every time it goes around. You can define what colors appear and in which order.
+* *Color sequence*: DRPLoadingSpinner has the opportunity to change color every time it goes around. You can define what colors appear and in which order. When the end of the sequence is reached, it loops back to the beginning.
   * To define a single color, just set colorSequence to an array with just one color, like: `loadingSpinner.colorSequence = @[ UIColor.grayColor ];`
 ```objc
 loadingSpinner.colorSequence = @[ UIColor.cyanColor, UIColor.magentaColor, UIColor.yellowColor, UIColor.blackColor ];
