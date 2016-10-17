@@ -2,7 +2,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "DRPLoadingSpinner"
-  s.version      = "0.2.0"
+  s.version      = "1.0.0"
   s.summary      = "A loading spinner that's strikingly Material-like."
 
   s.description  = <<-DESC
