@@ -1,3 +1,6 @@
+### 1.0.1
+* No code changes, just updated some inaccurate documentation
+
 ### 1.0.0
 * Added DRPRefreshControl
 * A few more rendering fixes
