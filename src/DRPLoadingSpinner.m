@@ -47,6 +47,7 @@
 }
 
 - (void)setup {
+    self.circleLayer = [[CAShapeLayer alloc] init];
     
     self.drawCycleDuration = 0.75;
     self.rotationCycleDuration = 1.5;
@@ -64,7 +65,6 @@
         [UIColor blueColor]
     ];
     
-    self.circleLayer = [[CAShapeLayer alloc] init];
     self.circleLayer.fillColor = [UIColor clearColor].CGColor;
     self.circleLayer.anchorPoint = CGPointMake(.5, .5);
     self.circleLayer.strokeColor = self.colorSequence.firstObject.CGColor;

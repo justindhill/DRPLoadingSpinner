@@ -25,11 +25,28 @@ NSString * const ReuseIdentifier = @"ReuseIdentifier";
     __weak SampleTableViewController *weakSelf = self;
     [self.tableView registerClass:[UITableViewCell class] forCellReuseIdentifier:ReuseIdentifier];
     self.drpRefreshControl = [[DRPRefreshControl alloc] init];
-    [self.drpRefreshControl addToTableViewController:self refreshBlock:^{
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [weakSelf.drpRefreshControl endRefreshing];
-        });
-    }];
+    
+//    [self.drpRefreshControl addToTableViewController:self target:self selector:@selector(refreshTriggered)];
+
+//    [self.drpRefreshControl addToTableViewController:self refreshBlock:^{
+//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//            [weakSelf.drpRefreshControl endRefreshing];
+//        });
+//    }];
+
+    [self.drpRefreshControl addToScrollView:self.tableView target:self selector:@selector(refreshTriggered)];
+
+//    [self.drpRefreshControl addToScrollView:self.tableView refreshBlock:^{
+//        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//            [weakSelf.drpRefreshControl endRefreshing];
+//        });
+//    }];
+}
+
+- (void)refreshTriggered {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self.drpRefreshControl endRefreshing];
+    });
 }
 
 #pragma mark - Table view data source

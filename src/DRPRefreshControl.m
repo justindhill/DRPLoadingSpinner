@@ -9,14 +9,18 @@
 #import "DRPRefreshControl.h"
 #import "DRPLoadingSpinner.h"
 
-@interface DRPRefreshControl () <UITableViewDelegate>
+@interface DRPRefreshControl () <UIScrollViewDelegate>
 
 @property (strong) UIRefreshControl *refreshControl;
 @property (strong) DRPLoadingSpinner *loadingSpinner;
-@property (weak) id<UITableViewDelegate> originalDelegate;
+@property (weak) id originalDelegate;
 @property (weak) UITableViewController *tableViewController;
-@property (strong) void (^refreshBlock)(void);
+@property (weak) UIScrollView *scrollView;
 @property BOOL awaitingRefreshEnd;
+
+@property (strong) void (^refreshBlock)(void);
+@property (weak) id refreshTarget;
+@property (assign) SEL refreshSelector;
 
 @end
 
@@ -35,42 +39,81 @@
 }
 
 - (void)addToTableViewController:(UITableViewController *)tableViewController refreshBlock:(void (^)(void))refreshBlock {
-    [self removeFromPartnerObject];
-
-    self.tableViewController = tableViewController;
+    [self addToTableViewController:tableViewController];
     self.refreshBlock = refreshBlock;
+}
+
+- (void)addToTableViewController:(UITableViewController *)tableViewController target:(id)target selector:(SEL)selector {
+    [self addToTableViewController:tableViewController];
+    self.refreshTarget = target;
+    self.refreshSelector = selector;
+}
+
+- (void)addToTableViewController:(UITableViewController *)tableViewController {
+    [self removeFromPartnerObject];
+    
+    self.tableViewController = tableViewController;
+    self.scrollView = self.tableViewController.tableView;
 
     self.tableViewController.refreshControl = self.refreshControl;
     [self.refreshControl.subviews.firstObject removeFromSuperview];
     
-    self.originalDelegate = self.tableViewController.tableView.delegate;
-    self.tableViewController.tableView.delegate = self;
+    self.originalDelegate = self.scrollView.delegate;
+    self.scrollView.delegate = self;
+}
+
+- (void)addToScrollView:(UIScrollView *)scrollView refreshBlock:(void (^)(void))refreshBlock {
+    [self addToScrollView:scrollView];
+    self.refreshBlock = refreshBlock;
+}
+
+- (void)addToScrollView:(UIScrollView *)scrollView target:(id)target selector:(SEL)selector {
+    [self addToScrollView:scrollView];
+    self.refreshTarget = target;
+    self.refreshSelector = selector;
+}
+
+- (void)addToScrollView:(UIScrollView *)scrollView {
+    NSAssert([scrollView respondsToSelector:@selector(refreshControl)], @"refreshControl is only available on UIScrollView on iOS 10 and up.");
+    
+    [self removeFromPartnerObject];
+    self.scrollView = scrollView;
+    self.scrollView.refreshControl = self.refreshControl;
+    [self.refreshControl.subviews.firstObject removeFromSuperview];
+
+    self.originalDelegate = self.scrollView.delegate;
+    self.scrollView.delegate = self;
 }
 
 - (void)removeFromPartnerObject {
     if (self.tableViewController) {
-        self.tableViewController.tableView.delegate = self.originalDelegate;
         self.tableViewController.refreshControl = nil;
         self.tableViewController = nil;
     }
+
+    self.refreshTarget = nil;
+    self.refreshSelector = NULL;
+
+    self.scrollView.delegate = self.originalDelegate;
+    self.scrollView = nil;
 }
 
 - (void)beginRefreshing {
-    BOOL adjustScrollOffset = (self.tableViewController.tableView.contentInset.top == -self.tableViewController.tableView.contentOffset.y);
+    BOOL adjustScrollOffset = (self.scrollView.contentInset.top == -self.scrollView.contentOffset.y);
 
     self.loadingSpinner.hidden = NO;
     [self.refreshControl beginRefreshing];
     [self refreshControlTriggered:self.refreshControl];
 
     if (adjustScrollOffset) {
-        [self.tableViewController.tableView setContentOffset:CGPointMake(0, -self.tableViewController.tableView.contentInset.top) animated:YES];
+        [self.scrollView setContentOffset:CGPointMake(0, -self.scrollView.contentInset.top) animated:YES];
     }
 }
 
 - (void)endRefreshing {
     __weak DRPRefreshControl *weakSelf = self;
 
-    if (self.tableViewController.tableView.isDragging) {
+    if (self.scrollView.isDragging) {
         [self.refreshControl endRefreshing];
         return;
     }
@@ -84,7 +127,7 @@
         [weakSelf.loadingSpinner.layer removeAnimationForKey:animationGroupKey];
 
 
-        if (!weakSelf.tableViewController.tableView.isDecelerating) {
+        if (!weakSelf.scrollView.isDecelerating) {
             weakSelf.awaitingRefreshEnd = NO;
         }
     }];
@@ -112,6 +155,11 @@
 
     if (self.refreshBlock) {
         self.refreshBlock();
+    } else if (self.refreshTarget && self.refreshSelector) {
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            [self.refreshTarget performSelector:self.refreshSelector withObject:self];
+        #pragma clang diagnostic pop
     }
 }
 
