@@ -13,6 +13,8 @@ settings:
 	[spinner startAnimating];
 ```
 
+<br/>
+
 Done! See? That was easy. You can even use DRPLoadingSpinner as a drop-in replacement for UIRefreshControl. Check out its sibling, DRPRefreshControl.
 
 ```objc
@@ -20,6 +22,8 @@ Done! See? That was easy. You can even use DRPLoadingSpinner as a drop-in replac
     [refreshControl addToScrollView:self.scrollView target:self action:@selector(refreshTriggered:)];
 ```
 Bam! Now you've got a snazzy refresh control in just a couple lines of code.
+
+<br/>
 
 <p align="center">
   <img src="http://imgur.com/WQcgqdf.gif" width="320" />
