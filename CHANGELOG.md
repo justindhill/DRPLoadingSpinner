@@ -1,3 +1,7 @@
+### 1.0.0
+* Added DRPRefreshControl
+* A few more rendering fixes
+
 ### 0.2.0
 * Added ability to independently set the minimum arc length and the maximum arc length
 * Fixed buggy rendering
