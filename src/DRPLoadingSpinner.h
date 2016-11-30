@@ -48,7 +48,7 @@
         and their order. The colors will loop back to the beginning when the
         cycle for the last color has been completed.
  */
-@property (strong) NSArray<UIColor *> *colorSequence;
+@property (strong) NSArray<UIColor *> *colorSequence UI_APPEARANCE_SELECTOR;
 
 /**
  @return YES if the spinner is animating, otherwise NO
