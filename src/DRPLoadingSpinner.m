@@ -77,7 +77,13 @@
         @"transform": [NSNull null],
         @"hidden": [NSNull null]
     };
-    
+
+    // If we have an apperance specified, then use it to override the defaults.
+    if(nil != [DRPLoadingSpinner appearance].colorSequence)
+    {
+        self.colorSequence = [DRPLoadingSpinner appearance].colorSequence;
+    }
+
     [self refreshCircleFrame];
 }
 
