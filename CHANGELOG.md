@@ -1,3 +1,6 @@
+### 1.0.2
+* Silenced a noisy log message
+
 ### 1.0.1
 * No code changes, just updated some inaccurate documentation
 

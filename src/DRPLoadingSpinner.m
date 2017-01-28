@@ -26,7 +26,7 @@
     if (self = [super initWithFrame:CGRectMake(0, 0, 25, 25)]) {
         [self setup];
     }
-    
+
     return self;
 }
 
@@ -34,7 +34,7 @@
     if (self = [super initWithFrame:frame]) {
         [self setup];
     }
-    
+
     return self;
 }
 
@@ -42,13 +42,13 @@
     if (self = [super initWithCoder:aDecoder]) {
         [self setup];
     }
-    
+
     return self;
 }
 
 - (void)setup {
     self.circleLayer = [[CAShapeLayer alloc] init];
-    
+
     self.drawCycleDuration = 0.75;
     self.rotationCycleDuration = 1.5;
     self.staticArcLength = 0;
@@ -57,14 +57,14 @@
     self.lineWidth = 2.;
     self.opaque = NO;
     self.backgroundColor = [UIColor clearColor];
-    
+
     self.colorSequence = @[
         [UIColor redColor],
         [UIColor orangeColor],
         [UIColor purpleColor],
         [UIColor blueColor]
     ];
-    
+
     self.circleLayer.fillColor = [UIColor clearColor].CGColor;
     self.circleLayer.anchorPoint = CGPointMake(.5, .5);
     self.circleLayer.strokeColor = self.colorSequence.firstObject.CGColor;
@@ -143,14 +143,14 @@
     CGFloat sideLen = MIN(self.layer.frame.size.width, self.layer.frame.size.height) - (2 * self.lineWidth);
     CGFloat xOffset = ceilf((self.frame.size.width - sideLen) / 2.0);
     CGFloat yOffset = ceilf((self.frame.size.height - sideLen) / 2.0);
-    
+
     self.circleLayer.frame = CGRectMake(xOffset, yOffset, sideLen, sideLen);
     self.circleLayer.path = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(0, 0, sideLen, sideLen)].CGPath;
 }
 
 - (void)layoutSublayersOfLayer:(CALayer *)layer {
     [super layoutSublayersOfLayer:layer];
-    
+
     if (!self.circleLayer.superlayer) {
         [self.layer addSublayer:self.circleLayer];
     }
@@ -160,14 +160,14 @@
 - (void)startAnimating {
     [self stopAnimating];
     self.circleLayer.hidden = NO;
-    
+
     self.isAnimating = YES;
     self.isFirstCycle = YES;
     self.circleLayer.strokeEnd = [self proportionFromArcLengthRadians:self.minimumArcLength];
-    
+
     self.colorIndex = 0;
     self.circleLayer.strokeColor = [self.colorSequence[self.colorIndex] CGColor];
-    
+
     [self addAnimationsToLayer:self.circleLayer reverse:NO rotationOffset:-M_PI_2];
 }
 
@@ -185,25 +185,23 @@
 #pragma mark
 
 - (void)addAnimationsToLayer:(CAShapeLayer *)layer reverse:(BOOL)reverse rotationOffset:(CGFloat)rotationOffset {
-    
+
     CABasicAnimation *strokeAnimation;
     CGFloat strokeDuration = self.drawCycleDuration;
     CGFloat currentDistanceToStrokeStart = 2 * M_PI * layer.strokeStart;
 
-    NSLog(@"distanceToStrokeStart: %f", currentDistanceToStrokeStart);
-
     if (reverse) {
         [CATransaction begin];
-        
+
         strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeStart"];
         CGFloat newStrokeStart = self.maximumArcLength - self.minimumArcLength;
-        
+
         layer.strokeEnd = [self proportionFromArcLengthRadians:self.maximumArcLength];
         layer.strokeStart = [self proportionFromArcLengthRadians:newStrokeStart];
-        
+
         strokeAnimation.fromValue = @(0);
         strokeAnimation.toValue = @([self proportionFromArcLengthRadians:newStrokeStart]);
-        
+
     } else {
         CGFloat strokeFromValue = self.minimumArcLength;
         CGFloat rotationStartRadians = rotationOffset;
@@ -229,21 +227,21 @@
         rotationAnimation.duration = self.rotationCycleDuration;
         rotationAnimation.repeatCount = CGFLOAT_MAX;
         rotationAnimation.fillMode = kCAFillModeForwards;
-        
+
         [layer removeAnimationForKey:@"rotation"];
         [layer addAnimation:rotationAnimation forKey:@"rotation"];
 
-        
+
         [CATransaction begin];
-        
+
         strokeAnimation = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
         strokeAnimation.fromValue = @([self proportionFromArcLengthRadians:strokeFromValue]);
         strokeAnimation.toValue = @([self proportionFromArcLengthRadians:self.maximumArcLength]);
-        
+
         layer.strokeStart = 0;
         layer.strokeEnd = [strokeAnimation.toValue doubleValue];
     }
-    
+
     strokeAnimation.delegate = self;
     strokeAnimation.fillMode = kCAFillModeForwards;
     strokeAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
@@ -252,7 +250,7 @@
     [layer removeAnimationForKey:@"stroke"];
     [layer addAnimation:strokeAnimation forKey:@"stroke"];
 
-    [CATransaction commit];    
+    [CATransaction commit];
 }
 
 - (void)advanceColorSequence {
@@ -272,7 +270,7 @@
 
         CGFloat rotationOffset = fmodf([[self.circleLayer.presentationLayer valueForKeyPath:@"transform.rotation.z"] floatValue], 2 * M_PI);
         [self addAnimationsToLayer:self.circleLayer reverse:isStrokeEnd rotationOffset:rotationOffset];
-        
+
         if (isStrokeStart) {
             [self advanceColorSequence];
         }
