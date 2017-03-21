@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DRPLoadingSpinnerTimingFunction.h"
 
 @interface DRPLoadingSpinner : UIView
 
@@ -44,11 +45,21 @@
 @property (assign) CFTimeInterval drawCycleDuration;
 
 /**
+ @brief The timing function that should be used for drawing the rail.
+ */
+@property (strong) CAMediaTimingFunction *drawTimingFunction;
+
+/**
  @brief An array of UIColors that defines the colors the spinner will draw in
         and their order. The colors will loop back to the beginning when the
         cycle for the last color has been completed.
  */
 @property (strong) NSArray<UIColor *> *colorSequence UI_APPEARANCE_SELECTOR;
+
+/**
+ @brief The color of the rail behind the spinner. Defaults to clear.
+ */
+@property (nonatomic) UIColor *backgroundRailColor;
 
 /**
  @return YES if the spinner is animating, otherwise NO

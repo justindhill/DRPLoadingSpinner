@@ -26,16 +26,19 @@
     
     self.spinner = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
     self.spinner.center = self.view.center;
-    self.spinner.rotationCycleDuration = 4;
+    self.spinner.rotationCycleDuration = 1;
     self.spinner.drawCycleDuration = .5;
-    self.spinner.lineWidth = 4;
-    self.spinner.maximumArcLength = M_PI + M_PI_2;
-    self.spinner.minimumArcLength = M_PI;
+    self.spinner.lineWidth = 2;
+    self.spinner.colorSequence = @[[UIColor colorWithRed:64.0/255.0 green:153.0/255.0 blue:255.0/255.0 alpha:1]];
+    self.spinner.maximumArcLength = M_PI / 3;
+    self.spinner.minimumArcLength = M_PI / 3;
+    self.spinner.backgroundRailColor = [UIColor colorWithRed:239.0/255.0 green:239.0/255.0 blue:239.0/255.0 alpha:1];
     [self.view addSubview:self.spinner];
     
     self.spinner2 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];
-    self.spinner2.rotationCycleDuration = 3;
-    self.spinner2.drawCycleDuration = 2;
+    self.spinner2.rotationCycleDuration = 1.5;
+    self.spinner2.drawCycleDuration = 0.75;
+    self.spinner2.drawTimingFunction = [DRPLoadingSpinnerTimingFunction sharpEaseInOut];
     [self.view addSubview:self.spinner2];
     
     CGRect spinner2Frame = self.spinner.frame;
@@ -43,9 +46,11 @@
     self.spinner2.frame = spinner2Frame;
     
     self.spinner3 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 25, 25)];
-    self.spinner3.rotationCycleDuration = 1.6;
-    self.spinner3.minimumArcLength = M_PI / 3.;
-    self.spinner3.drawCycleDuration = .8;
+    self.spinner3.rotationCycleDuration = 500000;
+    self.spinner3.minimumArcLength = M_PI / 2.;
+    self.spinner3.maximumArcLength = M_PI;
+    self.spinner3.drawCycleDuration = 0.5;
+    self.spinner3.drawTimingFunction = [DRPLoadingSpinnerTimingFunction easeInOut];
     self.spinner3.colorSequence = @[ [UIColor lightGrayColor] ];
     self.spinner3.lineWidth = 2.;
     

@@ -1,4 +1,4 @@
-# DRPLoadingSpinner ![Preview image](http://imgur.com/0cLpUM3.gif)
+# DRPLoadingSpinner ![Preview image](http://i.imgur.com/CppX03H.gif)
 
 DRPLoadingSpinner is a neat little loading spinner. It's pretty
 configurable, so you can achieve a variety of effects. Check out
@@ -43,6 +43,11 @@ There are a handful of things you can customize on your loading spinner:
 loadingSpinner.colorSequence = @[ UIColor.cyanColor, UIColor.magentaColor, UIColor.yellowColor, UIColor.blackColor ];
 ```
 
+* *Background rail color*: You can add a background rail to your spinner by setting a color here. This defaults to UIColor.clear, which effectively disables it.
+```objc
+loadingSpinner.backgroundRailColor = UIColor.lightGrayColor;
+```
+
 * *Line width:* You can change the thickness of the line drawn when the spinner is spinning:
 ```objc
 loadingSpinner.lineWidth = 3; // a pretty thick line.
@@ -62,6 +67,11 @@ loadingSpinner.rotationCycleDuration = 2; // a short and pretty noticeable rotat
 * *Draw cycle duration:* Draw cycle duration is the length of time taken up by any period of expansion or contraction of the line. Time taken by expansion and contraction are always equal. I find that it's quite pleasant to look at if rotationCycleDuration and drawCycleDuration are multiples of one another.
 ```objc
 loadingSpinner.drawCycleDuration = 1;
+```
+
+* *Draw animation timing function:* The draw animation timing function controls how quick or gradual your the animation will appear. This is a standard CAMediaTimingFunction, so you can use anything you like, but check out `DRPLoadingSpinnerTimingFunction` for some presets.
+```objc
+loadingSpinner.drawTimingFunction = [DRPLoadingSpinnerTimingFunction sharpInOut];
 ```
 
 ### Handy APIs
