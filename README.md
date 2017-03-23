@@ -1,4 +1,8 @@
-# DRPLoadingSpinner ![Preview image](http://i.imgur.com/CppX03H.gif)
+# DRPLoadingSpinner
+
+<p align="center">
+  <img src="http://i.imgur.com/CppX03H.gif" alt="Preview Image"/>
+</p>
 
 DRPLoadingSpinner is a neat little loading spinner. It's pretty
 configurable, so you can achieve a variety of effects. Check out
