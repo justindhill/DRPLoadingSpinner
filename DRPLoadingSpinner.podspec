@@ -2,11 +2,11 @@
 Pod::Spec.new do |s|
 
   s.name         = "DRPLoadingSpinner"
-  s.version      = "1.1.0"
-  s.summary      = "A loading spinner and refresh control that's strikingly Material-like."
+  s.version      = "1.1.1"
+  s.summary      = "A loading spinner/activity indicator and refresh control that's strikingly Material-like."
 
   s.description  = <<-DESC
-	"A loading spinner and refresh control that's strikingly Material-like."
+	"DRPLoadingSpinner's default settings are very similar to how a Material spinner would look; however, it's very customizable and can express many different styles of spinner. Check out the readme for more info."
   DESC
 
   s.homepage     = "https://github.com/justindhill/DRPLoadingSpinner"

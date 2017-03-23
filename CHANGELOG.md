@@ -1,3 +1,6 @@
+### 1.1.1
+* Updated the summary and description
+
 ### 1.1.0
 * Added the ability to set the timing function of the draw cycle. This allows you to have more control over the subtlety or loudness of the animation.
 * Added a background rail and the ability to set its color. This defaults to clear, so your existing animations won't be affected.
