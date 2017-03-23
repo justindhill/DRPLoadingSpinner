@@ -29,6 +29,9 @@ Bam! Now you've got a snazzy refresh control in just a couple lines of code. Ref
   <img src="http://imgur.com/WQcgqdf.gif" width="320" />
 </p>
 
+### Why not Swift?
+Swift is not yet source-stable, which means that whenever an update to Swift is released, there is a risk that older Swift code won't compile. You shouldn't have to wait for me or someone else to update this library to a new Swift version in order to use it. The good news is, thanks to Swift-ObjC interop, DRPLoadingSpinner can be accessed easily from Swift code and will not break when new versions are released.
+
 ### Installing
 Installing couldn't be easier. Just install the Pod and away you go! If you're not the CocoaPods type, you can always just add the contents of the `src` directory to your project and get building!
 ```ruby
