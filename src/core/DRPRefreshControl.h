@@ -9,6 +9,7 @@
 @import UIKit;
 
 @class DRPLoadingSpinner;
+@class ASTableNode;
 
 @interface DRPRefreshControl : NSObject
 

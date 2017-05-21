@@ -8,19 +8,13 @@
 
 #import "DRPRefreshControl.h"
 #import "DRPLoadingSpinner.h"
+#import "DRPRefreshControl_Protected.h"
 
 @interface DRPRefreshControl () <UIScrollViewDelegate>
 
-@property (strong) UIRefreshControl *refreshControl;
 @property (strong) DRPLoadingSpinner *loadingSpinner;
-@property (weak) id originalDelegate;
 @property (weak) UITableViewController *tableViewController;
-@property (weak) UIScrollView *scrollView;
 @property BOOL awaitingRefreshEnd;
-
-@property (strong) void (^refreshBlock)(void);
-@property (weak) id refreshTarget;
-@property (assign) SEL refreshSelector;
 
 @end
 

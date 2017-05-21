@@ -2,7 +2,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "DRPLoadingSpinner"
-  s.version      = "1.1.2"
+  s.version      = "1.2.0"
   s.summary      = "A loading spinner/activity indicator and refresh control that's strikingly Material-like."
 
   s.description  = <<-DESC
@@ -16,6 +16,15 @@ Pod::Spec.new do |s|
   s.author       = { "Justin Hill" => "jhill.d@gmail.com" }
   s.platform     = :ios, "7.0"
   s.source       = { :git => "https://github.com/justindhill/DRPLoadingSpinner.git", :tag => s.version }
-  s.source_files = "src", "src/*.{h,m}"
 
+  s.default_subspec = 'core'
+  s.subspec 'core' do |core|
+    core.source_files = 'src/core/*.{h,m}'
+  end
+
+  s.subspec 'Texture' do |texture|
+    texture.dependency 'Texture'
+    texture.dependency 'DRPLoadingSpinner/core'
+    texture.source_files = 'src/texture/*.{h,m}'
+  end
 end
