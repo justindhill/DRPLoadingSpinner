@@ -1,3 +1,7 @@
+### 1.2.1
+* Changed a use of CGFLOAT_MAX to HUGE_VALF in to fix an undefined behavior warning in Xcode 9
+* Thanks to @hankinsoft for this fix!
+
 ### 1.1.1
 * Updated the summary and description
 
