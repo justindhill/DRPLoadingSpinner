@@ -249,7 +249,7 @@
         rotationAnimation.toValue = @(rotationStartRadians + (2 * M_PI));
         rotationAnimation.timingFunction = [DRPLoadingSpinnerTimingFunction linear];
         rotationAnimation.duration = self.rotationCycleDuration;
-        rotationAnimation.repeatCount = CGFLOAT_MAX;
+        rotationAnimation.repeatCount = HUGE_VALF;
         rotationAnimation.fillMode = kCAFillModeForwards;
 
         [layer removeAnimationForKey:@"rotation"];
