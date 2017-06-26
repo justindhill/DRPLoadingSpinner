@@ -66,6 +66,11 @@ loadingSpinner.maximumArcLength = (2 * M_PI) - M_PI_4; // line will get as long 
 loadingSpinner.minimumArcLength = 0; // line will completely disappear at its shortest.
 ```
 
+* *Rotation direction:* Which direction the spinner should spin. Defaults to DRPRotationDirectionClockwise, but can also be set to DRPRotationDirectionCounterClockwise.
+```objc
+loadingSpinner.rotationDirection = DRPRotationDirectionCounterClockwise;
+```
+
 * *Rotation cycle duration:* As the spinner is expanding and contracting, it also spins about its center. The rotation cycle duration is how long it would take to make a complete revolution if left interrupted. It's a CFTimeInterval, so it's measured in seconds!
 ```objc
 loadingSpinner.rotationCycleDuration = 2; // a short and pretty noticeable rotation

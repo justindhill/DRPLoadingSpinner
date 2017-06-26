@@ -1,3 +1,7 @@
+### 1.3.0
+* Added ability to set the rotation direction of the spinner
+* Fixed background rail does not hide when animation is stopped
+
 ### 1.2.1
 * Changed a use of CGFLOAT_MAX to HUGE_VALF in to fix an undefined behavior warning in Xcode 9
 * Thanks to @hankinsoft for this fix!
