@@ -33,6 +33,7 @@
     self.spinner.maximumArcLength = M_PI / 3;
     self.spinner.minimumArcLength = M_PI / 3;
     self.spinner.backgroundRailColor = [UIColor colorWithRed:239.0/255.0 green:239.0/255.0 blue:239.0/255.0 alpha:1];
+    self.spinner.rotationDirection = DRPRotationDirectionCounterClockwise;
     [self.view addSubview:self.spinner];
     
     self.spinner2 = [[DRPLoadingSpinner alloc] initWithFrame:CGRectMake(0, 0, 28, 28)];

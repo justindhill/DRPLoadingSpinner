@@ -8,8 +8,20 @@
 
 #import <UIKit/UIKit.h>
 #import "DRPLoadingSpinnerTimingFunction.h"
+/**
+ *  @brief The set of directions that DRPLoadingSpinner can spin
+ */
+typedef NS_ENUM(NSInteger, DRPRotationDirection) {
+    DRPRotationDirectionClockwise,
+    DRPRotationDirectionCounterClockwise
+};
 
 @interface DRPLoadingSpinner : UIView
+
+/**
+ *  @brief Which direction the spinner should spin. Defaults to clockwise.
+ */
+@property (nonatomic, assign) DRPRotationDirection rotationDirection;
 
 /**
  *  @brief When the spinner is not animating, the length of the arc to be drawn. This can

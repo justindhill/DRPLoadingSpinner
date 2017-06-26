@@ -51,6 +51,7 @@
     self.foregroundRailLayer = [[CAShapeLayer alloc] init];
     self.backgroundRailLayer = [[CAShapeLayer alloc] init];
     
+    self.rotationDirection = DRPRotationDirectionClockwise;
     self.drawCycleDuration = 0.75;
     self.rotationCycleDuration = 1.5;
     self.staticArcLength = 0;
@@ -71,11 +72,20 @@
     
     self.backgroundRailLayer.fillColor = [UIColor clearColor].CGColor;
     self.backgroundRailLayer.strokeColor = [UIColor clearColor].CGColor;
+    self.backgroundRailLayer.hidden = YES;
     
     self.foregroundRailLayer.fillColor = [UIColor clearColor].CGColor;
     self.foregroundRailLayer.anchorPoint = CGPointMake(.5, .5);
     self.foregroundRailLayer.strokeColor = self.colorSequence.firstObject.CGColor;
     self.foregroundRailLayer.hidden = YES;
+    
+    self.backgroundRailLayer.actions = @{
+        @"lineWidth": [NSNull null],
+        @"strokeEnd": [NSNull null],
+        @"strokeStart": [NSNull null],
+        @"transform": [NSNull null],
+        @"hidden": [NSNull null]
+    };
 
     self.foregroundRailLayer.actions = @{
         @"lineWidth": [NSNull null],
@@ -101,11 +111,27 @@
 //    [self insertPlane:self.foregroundRailLayer];
 }
 
+- (void)setRotationDirection:(DRPRotationDirection)rotationDirection {
+    _rotationDirection = rotationDirection;
+    
+    switch (rotationDirection) {
+        case DRPRotationDirectionCounterClockwise:
+            self.layer.affineTransform = CGAffineTransformScale(CGAffineTransformIdentity, -1, 1);
+            break;
+            
+        case DRPRotationDirectionClockwise:
+        default:
+            self.layer.affineTransform = CGAffineTransformScale(CGAffineTransformIdentity, 1, 1);
+            break;
+    }
+}
+
 - (void)setStaticArcLength:(CGFloat)staticArcLength {
     _staticArcLength = staticArcLength;
 
     if (!self.isAnimating) {
         self.foregroundRailLayer.hidden = NO;
+        self.backgroundRailLayer.hidden = NO;
         self.foregroundRailLayer.strokeColor = self.colorSequence.firstObject.CGColor;
         self.foregroundRailLayer.strokeStart = 0;
         self.foregroundRailLayer.strokeEnd = [self proportionFromArcLengthRadians:staticArcLength];
@@ -183,6 +209,7 @@
 - (void)startAnimating {
     [self stopAnimating];
     self.foregroundRailLayer.hidden = NO;
+    self.backgroundRailLayer.hidden = NO;
     
     self.isAnimating = YES;
     self.isFirstCycle = YES;
@@ -197,6 +224,7 @@
 - (void)stopAnimating {
     self.isAnimating = NO;
     self.foregroundRailLayer.hidden = YES;
+    self.backgroundRailLayer.hidden = YES;
     [self.foregroundRailLayer removeAllAnimations];
 }
 
