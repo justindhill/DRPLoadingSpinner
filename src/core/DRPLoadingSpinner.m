@@ -31,6 +31,14 @@
     return self;
 }
 
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    
+    if (self.window && self.isAnimating) {
+        [self startAnimating];
+    }
+}
+
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
         [self setup];

@@ -1,3 +1,6 @@
+### 1.3.1
+* Fixed isAnimating property gets out of sync if a loading spinner is removed from its window while it is animating. The spinner will now resume animating when it is re-added to a window.
+
 ### 1.3.0
 * Added ability to set the rotation direction of the spinner
 * Fixed background rail does not hide when animation is stopped
