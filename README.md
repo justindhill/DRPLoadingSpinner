@@ -81,7 +81,7 @@ loadingSpinner.rotationCycleDuration = 2; // a short and pretty noticeable rotat
 loadingSpinner.drawCycleDuration = 1;
 ```
 
-* *Draw animation timing function:* The draw animation timing function controls how quick or gradual your the animation will appear. This is a standard CAMediaTimingFunction, so you can use anything you like, but check out `DRPLoadingSpinnerTimingFunction` for some presets.
+* *Draw animation timing function:* The draw animation timing function controls how quick or gradual the animation will appear. This is a standard CAMediaTimingFunction, so you can use anything you like, but check out `DRPLoadingSpinnerTimingFunction` for some presets.
 ```objc
 loadingSpinner.drawTimingFunction = [DRPLoadingSpinnerTimingFunction sharpInOut];
 ```
